@@ -2,7 +2,7 @@ application: yyfearth
 version: 1
 runtime: python
 api_version: 1
-default_expiration: "1d"
+default_expiration: "1s"
 
 handlers:
 - url: /(index\.html?)?
@@ -23,25 +23,25 @@ handlers:
 - url: /apps/
   static_files: static/apps/index.html
   upload: static/apps/index\.html
-  expiration: "15d"
+  expiration: "1s"
 
 - url: /apps/(index|baeword|xmlcms|browsers)?
   static_files: static/apps/\1.html
   upload: static/apps/(.+)\.html
-  expiration: "1d"
+  expiration: "1s"
 
  # resources mapping
 - url: /apps/(.+?)\.manifest
   static_files: static/apps/\1.manifest
   upload: static/apps/(.+)\.manifest
   mime_type: text/cache-manifest
-  expiration: "30s"
+  expiration: "1s"
 
 - url: /(js|data)/(.+?\.js)
   static_files: static/\1/\2
   upload: static/(.+?)/(.+?\.js)
   mime_type: text/javascript
-  expiration: "1h"
+  expiration: "1s"
 
 - url: /images/(.+?)\.ico
   static_files: static/images/\1.ico
@@ -52,7 +52,7 @@ handlers:
 - url: /(images|js|css|res|data)/(.+)
   static_files: static/\1/\2
   upload: static/(.+)/(.+)
-  expiration: "1d"
+  expiration: "1s"
 
  # apps url fix and redirect
 - url: /apps|/(static|dynamic|baeword|xmlcms|XmlCMS)/?
@@ -60,9 +60,10 @@ handlers:
 - url: /apps/(index|browsers|baeword|xmlcms|export)\.html?
   script: dynamic/main.py
 
- # XmlCMS.zip
+ # XmlCMS for XmlCMS.zip
 - url: /XmlCMS/.+
-  script: $PYTHON_LIB/google/appengine/ext/zipserve
+  static_dir: XmlCMS
+  #script: $PYTHON_LIB/google/appengine/ext/zipserve
 
  # webster cache
 - url: /webster/webster\.css
