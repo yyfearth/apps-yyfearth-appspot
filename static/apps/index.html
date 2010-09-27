@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+	<title>Appliction Index</title>
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+	<style type="text/css">
+		body, img {
+			opacity: 0;
+			-webkit-transition: opacity 1s ease-in;
+			-moz-transition: opacity 1s ease-in;
+			transition: opacity 1s ease-in;
+		}
+		
+		img, .img {
+			width: 300px;
+			height: 200px;
+			text-align: center;
+			font-family: Arial, sans-serif;
+			font-size: 50px;
+			line-height: 200px;
+			background-color: #fff;
+		}
+		
+		.loaded {
+			opacity: 1;
+		}
+		
+		h1 {
+			margin: 10px;
+			color: #06c;
+			-webkit-text-shadow: 1px 1px 5px #06c;
+			-moz-text-shadow: 1px 1px 5px #06c;
+			text-shadow: 1px 1px 5px #06c;
+		}
+		
+		li {
+			display: inline-block;
+			margin: 10px;
+		}
+		
+		a {
+			opacity: .6;
+			outline: none;
+			display: block;
+			text-decoration: none;
+			border: solid 5px #aaf;
+			padding: 5px;
+			text-align: center;
+			color: #77f;
+			font-weight: bold;
+			-webkit-border-radius: 5px;
+			-moz-border-radius: 5px;
+			border-radius: 5px;
+			-webkit-box-shadow: 1px 1px 10px #36a;
+			-moz-box-shadow: 1px 1px 10px #36a;
+			box-shadow: 1px 1px 10px #36a;
+			-webkit-text-shadow: 1px 1px 5px #36a;
+			-moz-text-shadow: 1px 1px 5px #36a;
+			text-shadow: 1px 1px 5px #36a;
+			background: #fff;
+			-webkit-transition: all 1s ease-in-out;
+			-moz-transition: all 1s ease-in-out;
+			transition: all 1s ease-in-out;
+		}
+		
+		a:focus {
+			opacity: .8;
+			color: #77f;
+			border-color: #88f;
+			background-color: #eef;
+			-webkit-box-shadow: 1px 1px 12px #06c;
+			-moz-box-shadow: 1px 1px 12px #06c;
+			box-shadow: 1px 1px 12px #06c;
+		}
+		
+		a:hover {
+			opacity: 1;
+			text-decoration: underline;
+			border-color: #55f;
+			background-color:#ccf;
+			color: #06c;
+			-webkit-box-shadow: 1px 1px 20px #04c;
+			-moz-box-shadow: 1px 1px 20px #04c;
+			box-shadow: 1px 1px 20px #04c;
+			-webkit-text-shadow: 1px 1px 5px #06c;
+			-moz-text-shadow: 1px 1px 5px #06c;
+			text-shadow: 1px 1px 5px #06c;
+		}
+		
+		.title {
+			display: block;
+		}
+	</style>
+</head>
+<body>
+	<h1>Appliction Index</h1>
+	<ul>
+		<li><a name="thumb" href="baeword" title="baeword">
+			<img src="../images/apps/baeword.png" alt="baeword" />
+			<span class="title">baeword</span></a></li>
+		<li><a name="thumb" href="xmlcms" title="XmlCMS">
+			<img src="../images/apps/xmlcms.png" alt="XmlCMS" />
+			<span class="title">XmlCMS (Demo)</span></a></li>
+	</ul>
+	<script type="text/javascript">
+		// must below all imgs
+		document.body.className = 'loaded';
+		document.getElementsByName("thumb")[0].focus();
+		var imgs = document.getElementsByTagName('img');
+		for (var i = 0; i < imgs.length; i++) {
+			imgs[i].onload = function () {
+				this.className = 'loaded';
+			};
+			imgs[i].onerror = function () {
+				var div_img = document.createElement('div');
+				div_img.className = 'img';
+				div_img.innerText = this.alt;
+				this.parentNode.replaceChild(div_img, this);
+			};
+		}
+	</script>
+</body>
+</html>
+<!-- 2010-09-28 00:30:08 -->
