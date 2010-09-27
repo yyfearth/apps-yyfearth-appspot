@@ -1,0 +1,109 @@
+application: yyfearth
+version: 1
+runtime: python
+api_version: 1
+default_expiration: "1d"
+
+handlers:
+- url: /(index\.html?)?
+  script: dynamic/main.py
+
+ # robots and favicon
+- url: /robots\.txt
+  static_files: static/robots.txt
+  upload: static/robots\.txt
+
+- url: /favicon\.ico
+  static_files: static/images/earth.ico
+  upload: static/images/earth\.ico
+  mime_type: image/x-icon
+  expiration: "30d"
+
+ # apps static mapping
+- url: /apps/
+  static_files: static/apps/index.html
+  upload: static/apps/index\.html
+  expiration: "15d"
+
+- url: /apps/(index|baeword|xmlcms|browsers)?
+  static_files: static/apps/\1.html
+  upload: static/apps/(.+)\.html
+  expiration: "1d"
+
+ # resources mapping
+- url: /apps/(.+?)\.manifest
+  static_files: static/apps/\1.manifest
+  upload: static/apps/(.+)\.manifest
+  mime_type: text/cache-manifest
+  expiration: "30s"
+
+- url: /(js|data)/(.+?\.js)
+  static_files: static/\1/\2
+  upload: static/(.+?)/(.+?\.js)
+  mime_type: text/javascript
+  expiration: "1h"
+
+- url: /images/(.+?)\.ico
+  static_files: static/images/\1.ico
+  upload: static/images/(.+?)\.ico
+  mime_type: image/x-icon
+  expiration: "30d"
+
+- url: /(images|js|css|res|data)/(.+)
+  static_files: static/\1/\2
+  upload: static/(.+)/(.+)
+  expiration: "1d"
+
+ # apps url fix and redirect
+- url: /apps|/(static|dynamic|baeword|xmlcms|XmlCMS)/?
+  script: dynamic/main.py
+- url: /apps/(index|browsers|baeword|xmlcms|export)\.html?
+  script: dynamic/main.py
+
+ # XmlCMS.zip
+- url: /XmlCMS/.+
+  script: $PYTHON_LIB/google/appengine/ext/zipserve
+
+ # webster cache
+- url: /webster/webster\.css
+  static_files: static/css/webster.css
+  upload: static/css/webster\.css
+  expiration: "30d"
+- url: /webster.*
+  script: dynamic/webster/webster.py
+# webstorage
+- url: /webstorage.*
+  script: dynamic/webstorage/webstorage.py
+# GAppProxy
+- url: /proxy/fetch
+  script: dynamic/gappproxy/fetch.py
+- url: /proxy/admin
+  script: dynamic/gappproxy/admin.py
+
+ # admin
+- url: /admin/.*
+  script: $PYTHON_LIB/google/appengine/ext/admin
+  login: admin
+ # remote api
+- url: /remote_api
+  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
+  login: admin
+ # 404
+- url: .*
+  script: dynamic/main.py
+
+skip_files:
+- ^(.*/)?app\.yaml
+- ^(.*/)?app\.yml
+- ^(.*/)?index\.yaml
+- ^(.*/)?index\.yml
+- ^(.*/)?#.*#
+- ^(.*/)?.*~
+- ^(.*/)?.*\.py[co]
+- ^(.*/)?.*/RCS/.*
+- ^(.*/)?\..*
+- ^(.*/)?.*\.cmd$
+- ^(.*/)?.*\.bak$
+
+derived_file_type:
+- python_precompiled
