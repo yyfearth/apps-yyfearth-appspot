@@ -1,22 +1,22 @@
 ﻿/*!
 * beaword powered by Wilson@yyfearth.com
 * filename: loader-baeword.js
-* last update: 2010-09-28 00:39:32
+* last update: 2010-09-28 17:25:06
 */
 
 (function () { // loader util closure
 
 	try { // browser check
-		var ua = navigator.userAgent;
-		navigator.app = window.opera && 'opera' || /MSIE/i.test(ua) && 'ie' || /firefox/i.test(ua) && 'firefox' || /chrome/i.test(ua) && 'chrome' || /safari/i.test(ua) && 'safari' || /webkit/i.test(ua) && 'webkit' || 'mozilla';
-		navigator.moz5 = /Mozilla\/5.0/i.test(ua);
-		navigator.kernel = /Trident/i.test(ua) && 'Trident' || /WebKit/i.test(ua) && 'WebKit' || /KHTML/i.test(ua) && 'KHTML' || /Presto/i.test(ua) && 'Presto' || /Gecko/i.test(ua) && 'Gecko'
-		if (navigator.app == 'ie') {
-			navigator.ver = parseFloat(ua.match(/MSIE (\d+\.\d+)/)[1]);
-			if (typeof localStorage != 'object' || navigator.ver > 8) { // IE7- or IE8/9 localfile
-				var ver = navigator.ver.toFixed(1);
-				if (navigator.ver == 8) ver += ' (localStorage Disabled)';
-				else if (navigator.ver > 8) ver += ' (Temporary Unsupported)';
+		var nav = navigator, ua = nav.userAgent;
+		nav.app = window.opera && 'opera' || /MSIE/i.test(ua) && 'ie' || /firefox/i.test(ua) && 'firefox' || /chrome/i.test(ua) && 'chrome' || /safari/i.test(ua) && 'safari' || /webkit/i.test(ua) && 'webkit' || 'mozilla';
+		nav.moz5 = /Mozilla\/5.0/i.test(ua);
+		nav.kernel = /Trident/i.test(ua) && 'Trident' || /WebKit/i.test(ua) && 'WebKit' || /KHTML/i.test(ua) && 'KHTML' || /Presto/i.test(ua) && 'Presto' || /Gecko/i.test(ua) && 'Gecko'
+		if (nav.app == 'ie') {
+			nav.ver = parseFloat(ua.match(/MSIE (\d+\.\d+)/)[1]);
+			if (typeof localStorage != 'object' || nav.ver > 8) { // IE7- or IE8/9 localfile
+				var ver = nav.ver.toFixed(1);
+				if (nav.ver == 8) ver += ' (localStorage Disabled)';
+				else if (nav.ver > 8) ver += ' (Temporary Unsupported)';
 				alert('Your Browser\nMicrosoft Internet Explorer ' + ver + '\nis not supported by this application!\n\nWe recommend you switch your browser to use this WebApp.');
 				document.execCommand('stop');
 				location.replace('browsers.html');
@@ -227,7 +227,9 @@
 		document.close();
 		// code moved to exportHTML
 	} else { // baeword loader
+		document.title = 'baeword - init...';
 		$include(files);
+		document.write('<div id="desktop-icons"></div>');
 	}
 
 })() // end of loader util closure

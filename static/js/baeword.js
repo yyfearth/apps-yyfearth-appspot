@@ -8,7 +8,7 @@
 */
 Ext.namespace('baeword');
 baeword.info = {
-	LAST_UPDATE: '2010-09-26 15:51:19',
+	LAST_UPDATE: '2010-09-28 17:25:06',
 	CODE_NAME: 'Proto',
 	APP_VER: '0.8',
 	APP_NAME: 'baeword',
@@ -22,16 +22,16 @@ baeword.info = {
 
 (function (baeword) { // baeword init
 
-	var 
+	var nav = navigator,
 		ERR_SOUND_URL = '../res/err.mp3',
 		BLANK_IMAGE_URL = '../images/blank.gif',
-		APPS_INDEX_URL = 'index.html';
-	//ERR_SOUND_URL="../res/err.mp3",BLANK_IMAGE_URL="../images/blank.gif",APPS_INDEX_URL="index";
+		ICON_BASE_URL = '../images/apps/',
+		APPS_INDEX_URL = 'index.html'; //APPS_INDEX_URL="index";
 
 	// update
 	//baeword.last_update_ts = Date.parse(baeword.LAST_UPDATE) / 1000;
 	// app cache update
-	//window.navigator.onLine
+	//nav.onLine
 
 	var localCache = new Ext.ux.state.StorageProvider({ name: 'bae', fallback: false }),
 	optionCache = new Ext.ux.state.StorageProvider({ name: 'cur' }),
@@ -629,7 +629,7 @@ baeword.info = {
 			comboSearch.store.loadData(comboSearch.words.map(function (w) { return [w]; }));
 		},
 		go: function () {
-			baeword.dlgDict.show(comboSearch.getRawValue(), option.defaultDict);
+			baeword.dlgDict.go(comboSearch.getRawValue(), option.defaultDict);
 		},
 		listeners: {
 			render: function () {
@@ -644,7 +644,7 @@ baeword.info = {
 				// e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN, e.TAB, e.ESC,
 				// arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
 				if (e.getKey() == e.ENTER) {
-					baeword.dlgDict.show(field.getRawValue(), option.defaultDict);
+					baeword.dlgDict.go(field.getRawValue(), option.defaultDict);
 				} else if (e.getKey() == e.ESC) {
 					this.clear();
 				} else return true;
@@ -725,7 +725,7 @@ baeword.info = {
 			text: 'Online Dictionary',
 			handler: function () {
 				if (para_cmenu.record == null) return false;
-				baeword.dlgDict.show(para_cmenu.record.get('word'));
+				baeword.dlgDict.go(para_cmenu.record.get('word'));
 			}
 		}],
 		syncDict: function () {
@@ -889,6 +889,7 @@ baeword.info = {
 
 	baeword.btnSave = new Ext.Toolbar.SplitButton({
 		id: 'btnSave',
+		cls: 'x-btn-text-icon',
 		iconCls: 'icon-accept',
 		text: 'Save',
 		tooltip: {
@@ -1560,17 +1561,17 @@ baeword.info = {
 				cls: 'x-form-trigger x-form-search-trigger'
 			},
 			listeners: {
-				'render': function (self) {
+				render: function (self) {
 					Ext.fly('triggerDictSearch').on('click', function () {
-						dlgDict.show(self.getRawValue(), option.defaultDict);
+						dlgDict.go(self.getRawValue(), option.defaultDict);
 					});
 					DictSwitch.instances[1].on('change', function () {
-						if (!dlgDict.hidden) dlgDict.show(self.getRawValue(), option.defaultDict);
+						if (!dlgDict.hidden) dlgDict.go(self.getRawValue(), option.defaultDict);
 					});
 				},
-				'specialkey': function (field, e) {
+				specialkey: function (field, e) {
 					if (e.getKey() == e.ENTER) {
-						dlgDict.show(field.getRawValue(), option.defaultDict);
+						dlgDict.go(field.getRawValue(), option.defaultDict);
 						e.stopEvent();
 						return false;
 					}
@@ -1578,7 +1579,7 @@ baeword.info = {
 			}
 		}],
 		listeners: {
-			'afterrender': function (wnd) {
+			afterrender: function (wnd) {
 				if (!wnd.ifr_dict) {
 					wnd.ifr_dict = Ext.get('ifr_dlgDict');
 					wnd.ifr_dict.on('load', function () {
@@ -1611,11 +1612,11 @@ baeword.info = {
 					wnd.showed = true;
 				}
 			},
-			'activate': function () {
+			activate: function () {
 				if (this.opacity < 1) this.el.setOpacity(this.opacity = 1), this.el.clearOpacity(); // recover when keepOnTop
 				this.body.unmask(); // unmask when activated
 			},
-			'deactivate': function () {
+			deactivate: function () {
 				if (this.keepOnTop) { // set opacity and keepOnTop
 					this.el.setOpacity(this.opacity = 0.7, true);
 					var i = 1; this.manager.each(function () { i++ });
@@ -1623,19 +1624,19 @@ baeword.info = {
 				}
 				this.body.mask().setOpacity(0.3); // mask for click to top
 			},
-			'resize': function () {
+			resize: function () {
 				if (this.ifr_dict) // sync ifr size
 					this.ifr_dict.setSize(this.getInnerWidth(), this.getInnerHeight());
 				if (this.showed) this.toFront(); // resize to front
 			},
-			'hide': function () {
+			hide: function () {
 				if (this.ifr_dict) this.ifr_dict.dom.src = Ext.BLANK_URL;
 			}
 		},
-		show: function (word, dict_id) {
+		go: function (word, dict_id) {
 			if (!word) return false;
 			if (!dict_id) dict_id = option.defaultDict;
-			Ext.Window.prototype.show.call(this);
+			this.show();
 			this.word = word = word.replace(/\s*\(.+?\)/g, '');
 			var wnd = this, pos = wnd.getPosition(), // dict icon
 			icon = '<img src="' + Ext.BLANK_IMAGE_URL + '" class="' + dict_items[dict_id].iconCls + '" style="float:left;width:16px;height:16px;margin:0 3px 0 0"/>';
@@ -1725,6 +1726,7 @@ baeword.info = {
 							}, null, { single: true });
 						}, dlg, 5000, function () {
 							Ext.Msg.alert('Loading Timeout', 'Loading Wordlist Index timeout!');
+							grid.el.unmask();
 						}, 'baeword.load');
 					}, 100);
 					return false;
@@ -1964,6 +1966,7 @@ baeword.info = {
 		buttonAlign: 'left',
 		buttons: [{
 			text: 'Download from WebStorage',
+			cls: 'x-btn-text-icon',
 			iconCls: 'icon-download',
 			handler: function (btn) {
 				function after_login() {
@@ -2013,6 +2016,7 @@ baeword.info = {
 			}
 		}, '->', {
 			text: 'Import',
+			cls: 'x-btn-text-icon',
 			iconCls: 'icon-accept',
 			handler: function () {
 				var val = dlgImport.txtXport.getValue();
@@ -2057,6 +2061,7 @@ baeword.info = {
 		buttonAlign: 'left',
 		buttons: [{
 			text: 'Upload to WebStorage',
+			cls: 'x-btn-text-icon',
 			iconCls: 'icon-upload',
 			handler: function (btn) {
 				var text = dlgExport.txtXport.getValue();
@@ -2111,6 +2116,7 @@ baeword.info = {
 		}]
 	});
 
+	// init wnd for baeword
 	baeword.wnd = new Ext.Window({
 		id: 'wnd-baeword',
 		title: 'baeword',
@@ -2162,7 +2168,7 @@ baeword.info = {
 					resizeElement: this.resizerAction,
 					handleCls: 'x-window-handle',
 					listeners: { // keep step
-						'resize': function (r, w, h, e) {
+						resize: function (r, w, h, e) {
 							var nh = this.window.offsetH + Math.round((h - this.window.offsetH) / grid.row_h) * grid.row_h;
 							if (this.window.getHeight() != nh)
 								this.window.setHeight(nh);
@@ -2219,12 +2225,46 @@ baeword.info = {
 					});
 				} else wnd_close();
 				return false;
-			},
-			minimize: function () {
-				this.hide();
 			}
 		}
 	});
+
+	var icon_base_url = ICON_BASE_URL, IconButton = Ext.extend(Ext.Button, {
+		enableToggle: true,
+		initComponent: function () {
+			this.superclass = this.constructor.superclass;
+			this.tooltip = this.title || this.name;
+			this.superclass.initComponent.call(this);
+			var thisp = this.wnd.icon = this;
+			this.on('render', function () {
+				this.btnEl.setSize(40, 40);
+				this.iconImg = Ext.get(Ext.DomHelper.createDom({
+					tag: 'img',
+					width: '32px',
+					height: '32px',
+					alt: this.name,
+					src: icon_base_url + this.name + '.ico'
+				}));
+				this.iconImg.appendTo(this.btnEl).center(this.btnEl);
+			});
+			//this.icon = icon_base_url + this.name + '.ico';
+			this.wnd.on('minimize', function () {
+				this.hide(thisp.el);
+				thisp.toggle(false);
+			});
+			this.wnd.on('hide', function () {
+				thisp.toggle(false);
+			});
+			this.wnd.on('beforeshow', function () {
+				thisp.toggle(true);
+			});
+			this.on('toggle', function (thisp, state) {
+				state ? thisp.wnd.show(thisp.el) : thisp.wnd.hide(thisp.el);
+			});
+		}
+	}), icons = [
+		(baeword.icon = new IconButton({ id: 'icon-baeword', name: 'baeword', wnd: baeword.wnd }))
+	];
 
 	/******************** PRIVATE FUNCTIONS BELOW ********************/
 
@@ -2621,14 +2661,17 @@ baeword.info = {
 		}
 
 		// init and first load
-		Ext.fly('desktop').addClass('ready').setHeight(window.innerHeight || document.documentElement.clientHeight); // fadin
-		Ext.fly(window).on('resize', function () { // sync desktop size and window size
-			var w = window.innerWidth || document.documentElement.clientWidth || document.body.offsetWidth,
-				h = window.innerHeight || document.documentElement.clientHeight || document.body.offsetHeight;
-			Ext.fly('desktop').setSize(w, h);
-		});
+		Ext.getBody().addClass('ready');
+		//var icons = Ext.get('desktop-icons');
+		//icons.hover(function () {
+		//	icons.setLeft(0);
+		//}, function () {
+		//	icons.setLeft(3 - icons.getWdith());
+		//});
 		// desktop init
-		baeword.wnd.render('desktop');
+		baeword.wnd.render(Ext.getBody());
+		// desktop icons mast render after baeowrd
+		icons.forEach(function (icon) { icon.render('desktop-icons'); });
 		//baeword.wnd.show(); // show here
 		baeword.wnd.body.mask().addClass('mask-wait');
 		setTimeout(function () { // delay load
