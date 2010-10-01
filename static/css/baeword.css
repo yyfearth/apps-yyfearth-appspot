@@ -1,18 +1,18 @@
 /*!
  * beaword powered by Wilson@yyfearth.com
  * filename: baeword.css
- * last update: 2010-09-28 17:25:06
+ * last update: 2010-10-01 03:22:28
  */
 
 /* desktop and baeword */
 body {
 	opacity: 0;
-	-webkit-transition: opacity 1s ease-in;
-	-moz-transition: opacity 1s ease-in;
-	transition: opacity 1s ease-in;
 }
 body.ready {
 	opacity: 1;
+	-webkit-transition: opacity 1s ease-in;
+	-moz-transition: opacity 1s ease-in;
+	transition: opacity 1s ease-in;
 }
 #desktop-icons {
 	position: fixed;
@@ -25,6 +25,11 @@ body.ready {
 #wnd-baeword {
 	overflow: hidden !important;
 }
+/*#wnd-baeword * {
+	-webkit-text-shadow: 1px 1px 3px #999;
+	-moz-text-shadow: 1px 1px 3px #999;
+	text-shadow: 1px 1px 3px #999;
+}*/
 input, .x-shift-ctrl-alt, .x-shift-ctrl-alt * {
 	user-select: text !important;
 	-moz-user-select: text !important;

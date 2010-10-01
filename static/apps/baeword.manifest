@@ -1,17 +1,23 @@
 CACHE MANIFEST
-# 2010-09-28 01:40:32
+# 2010-10-01 03:18:59
 
 NETWORK:
 http://www.gstatic.com/dictionary/static/sounds/
 ../data/
+../images/gray/
+../css/xtheme-gray.css
 
 CACHE:
+./baeword.html
+./baeword.html?show
+./baeword.html?export
 ../js/loader-baeword.js
-../js/ext-base.js
-../js/ext-all.js
+../js/ext-base-debug-w-comments.js
+../js/ext-all-debug-wo-flash.js
 ../js/baeword.js
 ../js/ux-baeword.js
-../css/ext-all.css
+../css/ext-all-notheme.css
+../css/xtheme-blue.css
 ../css/ux-baeword.css
 ../css/baeword.css
 ../data/bae-wordlist-grered08.js

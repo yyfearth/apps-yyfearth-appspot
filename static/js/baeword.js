@@ -8,9 +8,9 @@
 */
 Ext.namespace('baeword');
 baeword.info = {
-	LAST_UPDATE: '2010-09-28 17:25:06',
+	LAST_UPDATE: '2010-10-01 02:40:49',
 	CODE_NAME: 'Proto',
-	APP_VER: '0.8',
+	APP_VER: '0.9',
 	APP_NAME: 'baeword',
 	FX_VER: 'ExtJS 3.2+',
 	FX_ID: 'ext322',
@@ -378,7 +378,7 @@ baeword.info = {
 		}
 	});
 
-	var editor = new (Ext.extend(Ext.ux.grid.RowEditor, {
+	var rowEditor = new (Ext.extend(Ext.ux.grid.RowEditor, {
 		ignoreNoChange: true,
 		editable: false,
 		once: false,
@@ -410,14 +410,70 @@ baeword.info = {
 		}
 	}))();
 
-	var filters = new Ext.ux.grid.GridFilters({
+	Ext.override(Ext.ux.grid.filter.NumericFilter, {
+		validateRecord: function (record) {
+			var val = record.get(this.dataIndex),
+            values = this.getValue();
+			if (values.eq !== undefined && val != values.eq) {
+				return false;
+			}
+			if (values.lt !== undefined && values.gt !== undefined && values.lt >= values.gt) {
+				if (values.lt == values.gt) {
+					return val != values.lt;
+				} else { // if (values.lt > values.gt) 
+					return val >= values.lt && values.lt <= values.gt;
+				}
+			} else {
+				if (values.lt !== undefined && val >= values.lt) {
+					return false;
+				}
+				if (values.gt !== undefined && val <= values.gt) {
+					return false;
+				}
+			}
+			return true;
+		}
+	});
+
+	var gridFilters = new Ext.ux.grid.GridFilters({
 		// encode and local configuration options defined previously for easier reuse
 		encode: false, // json encode the filter query
 		local: true,   // defaults to false (remote filtering)
 		filters: [{
 			type: 'string', dataIndex: 'id'
 		}, {
-			type: 'numeric', dataIndex: 'rate'
+			type: 'numeric', dataIndex: 'rate'/*,
+			onInputKeyUp: function (field, e) { // override
+				var k = e.getKey();
+				if (k == e.RETURN && field.isValid()) {
+					e.stopEvent();
+					this.hide(true);
+					return;
+				}
+
+				if (field == this.fields.eq) {
+					if (this.fields.gt) {
+						this.fields.gt.setValue(null);
+					}
+					if (this.fields.lt) {
+						this.fields.lt.setValue(null);
+					}
+				}
+				else {
+					this.fields.eq.setValue(null);
+					if (this.fields.gt.isValid() && this.fields.lt.isValid()) {
+						var gt = this.fields.gt.getValue(), lt = this.fields.lt.getValue();
+						if (Ext.isNumber(lt) && Ext.isNumber(gt) && lt >= gt) {
+							alert('lt = ' + lt + '\ngt = ' + gt);
+							//e.stopEvent();
+							//beep();
+							//return false;
+						}
+					}
+				}
+				// restart the timer
+				this.updateTask.delay(this.updateBuffer);
+			}*/
 		}, {
 			type: 'string', dataIndex: 'word'
 		}, {
@@ -655,15 +711,17 @@ baeword.info = {
 				combo._timeout = combo._timeout && clearTimeout(combo._timeout) || setTimeout(function () {
 					var word = combo.getRawValue();
 					if (word.length) {
-						//changeFilter({ 'word': new RegExp(word, 'i') });
 						store.filterSearch('word', new RegExp(word, 'i'));
 						comboFilter.change();
 						comboSearch.focus();
-					} else combo.clear();
+						combo.lastword = word;
+					} else if (combo.lastword) {
+						combo.lastword = null;
+						combo.clear();
+					}
 				}, 300);
 			},
 			select: function () {
-				//changeFilter({ 'word': new RegExp(this.getRawValue(), 'i') });
 				store.filterSearch('word', new RegExp(word, 'i'));
 				comboFilter.change();
 			}
@@ -677,7 +735,7 @@ baeword.info = {
 		shadow: false,
 		field: { xtype: 'textfield', allowBlank: true },
 		to: function (row, col) {
-			if (row == null || editor.editable) return false;
+			if (row == null || rowEditor.editable) return false;
 			if (col == null) col = 5;
 			this.row = row;
 			this.target = Ext.fly(grid.view.getCell(row, col).firstChild);
@@ -698,22 +756,22 @@ baeword.info = {
 		}
 	});
 
-	var para_cmenu = new Ext.menu.Menu({
+	var cmenuRow = new Ext.menu.Menu({
 		id: 'para-cmenu',
 		shadow: true,
 		items: [{
 			text: 'Edit',
 			iconCls: 'icon-edit',
 			handler: function () {
-				if (para_cmenu.row == null) return false;
-				editor.editOnce(para_cmenu.row);
+				if (cmenuRow.row == null) return false;
+				rowEditor.editOnce(cmenuRow.row);
 			}
 		}, {
 			text: 'Play Sound',
 			iconCls: 'icon-play-sound',
 			handler: function () {
-				if (para_cmenu.record == null) return false;
-				play(para_cmenu.record.get('word'));
+				if (cmenuRow.record == null) return false;
+				play(cmenuRow.record.get('word'));
 			},
 			listeners: {
 				'render': function (b) {
@@ -724,8 +782,8 @@ baeword.info = {
 			id: 'menu-dict',
 			text: 'Online Dictionary',
 			handler: function () {
-				if (para_cmenu.record == null) return false;
-				baeword.dlgDict.go(para_cmenu.record.get('word'));
+				if (cmenuRow.record == null) return false;
+				baeword.dlgDict.go(cmenuRow.record.get('word'));
 			}
 		}],
 		syncDict: function () {
@@ -899,7 +957,7 @@ baeword.info = {
 		},
 		handler: function (b) {
 			if (store.changed) {
-				editor.stopEditing();
+				rowEditor.stopEditing();
 				save();
 			} else {
 				b.showMenu();
@@ -967,8 +1025,8 @@ baeword.info = {
 				xtype: 'menucheckitem',
 				iconCls: 'icon-not-editable',
 				checkHandler: function (b, checked) {
-					editor.stopEditing();
-					editor.editable = checked;
+					rowEditor.stopEditing();
+					rowEditor.editable = checked;
 					if (checked) {
 						b.setIconClass('icon-editable');
 						//Ext.getCmp('btnAdd').enable();
@@ -985,7 +1043,7 @@ baeword.info = {
 				text: 'Add',
 				disabled: true/*,
 				handler: function () {
-					editor.stopEditing();
+					rowEditor.stopEditing();
 					store.insert(0, new Word({
 						rate: -1,
 						word: 'new word',
@@ -995,7 +1053,7 @@ baeword.info = {
 					grid.view.refresh();
 					grid.getSelectionModel().selectFirstRow();
 					grid.getSelectionModel().getSelected().markDirty();
-					editor.startEditing(0);
+					rowEditor.startEditing(0);
 				}*/
 			}, {
 				id: 'btnDel',
@@ -1003,7 +1061,7 @@ baeword.info = {
 				text: 'Remove',
 				disabled: true/*,
 				handler: function () {
-					editor.stopEditing();
+					rowEditor.stopEditing();
 					store.remove(grid.getSelectionModel().getSelected());
 					grid.view.refresh();
 				}*/
@@ -1244,7 +1302,7 @@ baeword.info = {
 		state: {},
 		stateId: 'grid-states',
 		bodyCfg: { cls: 'x-panel-body bae' },
-		plugins: [editor, filters],
+		plugins: [rowEditor, gridFilters],
 		columns: grid_columns_cfg,
 		autoExpandColumn: 'para',
 		view: new Ext.ux.grid.BufferView({
@@ -1298,7 +1356,7 @@ baeword.info = {
 					(e.key >= 16 || e.key <= 18) && grid.selectedEl && grid.selectedEl.removeClass('x-shift-ctrl-alt');
 				});
 				if (Ext.isIE) this.el.dom.onselectstart = function () { // for ie
-					return editor.editable || rmrkEditor.editing;
+					return rowEditor.editable || rmrkEditor.editing;
 				};
 			},
 			afterrender: function () {
@@ -1306,7 +1364,7 @@ baeword.info = {
 				this.buildHMenu();
 			},
 			keydown: function (e) {
-				if (editor.editable || rmrkEditor.editing) return false;
+				if (rowEditor.editable || rmrkEditor.editing) return false;
 				var key = e.getKey();
 				if (key == 38 || key == 40) { // up & down
 					grid.view.scroller.dom.scrollTop += (key == 38 ? -grid.row_h : grid.row_h);
@@ -1316,7 +1374,7 @@ baeword.info = {
 				} else if (key == 10 || key == 13) { // enter
 					chgrate();
 				} else if (key == 113) { // F2
-					grid.view.selectIdx != null && editor.editOnce(grid.view.selectIdx);
+					grid.view.selectIdx != null && rowEditor.editOnce(grid.view.selectIdx);
 				}
 				(grid.selectedEl = Ext.fly(grid.view.getRow(grid.view.selectIdx))) &&
 					(e.shiftKey || e.ctrlKey || e.altKey) && grid.selectedEl.addClass('x-shift-ctrl-alt');
@@ -1327,7 +1385,7 @@ baeword.info = {
 				//}
 			},
 			keypress: function (e) {
-				if (editor.editable || rmrkEditor.editing) return false;
+				if (rowEditor.editable || rmrkEditor.editing) return false;
 				var key = e.getKey(), rate = null;
 				if (key >= 48 && key <= 57) { // 0-9
 					rate = key - 48;
@@ -1361,7 +1419,7 @@ baeword.info = {
 			},
 			rowdblclick: function (grid, i, e) {
 				(document.selection || document.getSelection()).empty();
-				if (!editor.editable && !rmrkEditor.editing) {
+				if (!rowEditor.editable && !rmrkEditor.editing) {
 					grid.getSelectionModel().selectRow(i);
 					chgrate(' ');
 					e.stopEvent();
@@ -1386,10 +1444,10 @@ baeword.info = {
 				e.stopEvent();
 				var sm = grid.getSelectionModel();
 				sm.selectRow(row);
-				//para_cmenu.col = col;
-				para_cmenu.row = row;
-				para_cmenu.record = sm.getSelected();
-				para_cmenu.showAt(e.getXY());
+				//cmenuRow.col = col;
+				cmenuRow.row = row;
+				cmenuRow.record = sm.getSelected();
+				cmenuRow.showAt(e.getXY());
 				return false;
 			},
 			headercontextmenu: function (self, col, e) {
@@ -1911,7 +1969,7 @@ baeword.info = {
 		}
 	});
 
-	var TxtXport = Ext.extend(Ext.form.TextArea, {
+	var ScrollTextArea = Ext.extend(Ext.form.TextArea, {
 		wordWrap: false,
 		initComponent: Ext.form.TextArea.prototype.initComponent.createSequence(function () {
 			Ext.applyIf(this, {
@@ -1947,7 +2005,7 @@ baeword.info = {
 		readonly: false,
 		initComponent: function () {
 			Ext.Window.prototype.initComponent.call(this);
-			this.add(this.txtXport = new TxtXport({ readOnly: this.readonly }));
+			this.add(this.txtXport = new ScrollTextArea({ readOnly: this.readonly }));
 			this.on('beforeshow', function () {
 				this.setPosition((baeword.wnd.el.getWidth() - this.getWidth()) / 2);
 				this.setHeight(baeword.wnd.el.getHeight() - 30);
@@ -2593,6 +2651,7 @@ baeword.info = {
 				// do import
 				$load('bae-wordlist-' + wordlist_id + '.js', load_data, baeword, 15000, function () {
 					Ext.Msg.alert('Timeout', 'Loading wordlist data timeout!<br/>Maybe some problems occured.');
+					grid.el.unmask();
 				}, 'baeword.load'); // self callback
 			}
 		}
@@ -2645,8 +2704,7 @@ baeword.info = {
 	});
 
 	/********** on doc ready **********/
-
-	Ext.onReady(function () { // EP: document ready
+	baeword.show = function () {
 
 		Ext.QuickTips.init(); // QuickTips init
 		// Apply a set of config properties to the singleton
@@ -2661,17 +2719,21 @@ baeword.info = {
 		}
 
 		// init and first load
-		Ext.getBody().addClass('ready');
-		//var icons = Ext.get('desktop-icons');
-		//icons.hover(function () {
-		//	icons.setLeft(0);
+		Ext.getBody().addClass('ready'); // fade in
+		// icons bar
+		//var iconbar = Ext.get('desktop-icons');
+		//iconbar.hover(function () {
+		//	iconbar.addClass('hover');
+		//	iconbar.setLeft(0);
 		//}, function () {
-		//	icons.setLeft(3 - icons.getWdith());
+		//	iconbar.removeClass('hover');
+		//	iconbar.setLeft(3 - iconbar.getWidth());
 		//});
 		// desktop init
 		baeword.wnd.render(Ext.getBody());
 		// desktop icons mast render after baeowrd
-		icons.forEach(function (icon) { icon.render('desktop-icons'); });
+		var iconBar = Ext.DomHelper.append(Ext.getBody(), { id: 'desktop-icons', tag: 'div' }, true);
+		icons.forEach(function (icon) { icon.render(iconBar); });
 		//baeword.wnd.show(); // show here
 		baeword.wnd.body.mask().addClass('mask-wait');
 		setTimeout(function () { // delay load
@@ -2683,7 +2745,9 @@ baeword.info = {
 			}
 		}, 800);
 
-	}); // end of onReady
+	};
+
+	Ext.onReady(baeword.show); // EP: document ready
 
 	/********** labs functions **********/
 

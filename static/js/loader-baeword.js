@@ -101,7 +101,7 @@
 		}
 		return js;
 	}
-	function _import_css(css_file, id) { // import css
+	function _import_css(css_file, callback, scope, id) { // import css
 		var css = document.createElement('link'),
 		html_doc = document.getElementsByTagName('head')[0];
 		id && css.setAttribute('id', id);
@@ -109,37 +109,70 @@
 		css.setAttribute('type', 'text/css');
 		css.setAttribute('href', css_file);
 		html_doc.appendChild(css);
+		if (typeof callback == 'function') {
+			css.onreadystatechange = function () { // for ie
+				if (/^$(loaded|complete)/i.test(css.readyState))
+					callback.call(scope || window, css);
+			};
+			css.onload = function () { // for non-ie
+				callback.call(scope || window, css);
+			};
+		}
 		return css;
 	}
 
 	function $import(file, callback, scope, id) { // import once !
 		if (!file) return false;
 		else if (file instanceof Array) { // js_files array
-			var c = file.lenght, _callee = arguments.callee;
-			file.forEach(function (f) {
-				if (f.src) { // json
-					if (typeof callback == 'function') {
-						_callee(f.src, function (f_dom) {
+			var c = file.lenght, _import = arguments.callee;
+			if (typeof callback != 'function') {
+				file.forEach(function (f) { _import(f); });
+			} else if (id === true) { // async
+				file.forEach(function (f) {
+					if (f.src) { // json
+						_import(f.src, function (f_dom) {
 							if (typeof f.callback == 'function')
 								f.callback.call(f.scope || scope || window, f_dom);
 							if (! --c) callback.call(scope || window, f_dom);
-						}, f.scope || window, f.id || null);
-					} else _callee(f.src, null, null, f.id || null);
-				} else { // string
-					if (typeof callback == 'function') {
-						_callee(f, function (f_dom) {
+						}, f.scope || scope || window, f.id || null);
+					} else { // string
+						_import(f, function (f_dom) {
 							if (! --c) callback.call(scope || window, f_dom);
 						}, scope || window, id || null);
-					} else _callee(f);
-				}
-			});
+					}
+				});
+			} else { // sync
+				(function (f) {
+					var _enum_files = arguments.callee;
+					if (!f) {
+						return false;
+					} else if (f.src) { // json
+						_import(f.src, function (f_dom) {
+							if (typeof f.callback == 'function')
+								if (f.callback.call(f.scope || scope || window, f_dom) === false)
+									return false;
+							_enum_files(file.shift());
+						}, f.scope || window, f.id || null);
+					} else { // string
+						_import(f, function (f_dom) {
+							_enum_files(file.shift());
+						}, scope || window, id || null);
+					}
+				})(file.shift());
+			}
 		} else {
+			if (file.src) {
+				callback = file.callback || null;
+				scope = file.scope || null;
+				id = file.id || null;
+				file = file.src;
+			}
 			if (file in arguments.callee.history) {
 				return false;
 			} else {
 				arguments.callee.history[file] = true;
 				/\.css$/i.test(file)
-					? _import_css(arguments.callee.CSS_BASE_URL + file, id)
+					? _import_css(arguments.callee.CSS_BASE_URL + file, callback, scope, id)
 					: _import_js(arguments.callee.JS_BASE_URL + file, callback, scope, id);
 			}
 		}
@@ -211,12 +244,12 @@
 		'ext-all-notheme.css',
 		{ id: 'theme', src: 'xtheme-blue.css' },
 		'ux-baeword.css',
-		'baeword.css',
 		'ext-base-debug-w-comments.js',
 		'ext-all-debug-wo-flash.js',
 		'ux-baeword.js',
+		'baeword.css',
 		'baeword.js'
-	];
+	], scpt_idx = -2;
 
 	//deploy
 	//var files = ["ext-all.css","ux-baeword.css","baeword.css","ext-base.js","ext-all.js","ux-baeword.js","baeword.js"];
@@ -227,9 +260,52 @@
 		document.close();
 		// code moved to exportHTML
 	} else { // baeword loader
-		document.title = 'baeword - init...';
-		$include(files);
-		document.write('<div id="desktop-icons"></div>');
+		console.log(applicationCache.status);
+		if (/\bshow\b/i.test(location.search) || /^file:/i.test(location.href)) { // nav.onLine !== false
+			document.title = 'baeword - init...';
+			$include(files)
+		} else { // check update
+			document.title = 'baeword - downloading...';
+			//window.applicationCache && applicationCache.status in {
+			//	0: applicationCache.UNCACHED,
+			//	2: applicationCache.CHECKING,
+			//	3: applicationCache.DOWNLOADING
+			//}) {
+			function bae_show() {
+				if (arguments.callee.called) return false;
+				arguments.callee.called = true;
+				document.title = 'baeword - init...';
+				var div = document.getElementById('progress');
+				div && div.parentNode.removeChild(div);
+				$import(files.slice(scpt_idx));
+				//document.write('<div id="desktop-icons"></div>');
+			}
+			applicationCache.onnoupdate = applicationCache.onerror = function () {
+				bae_show();
+			};
+			applicationCache.oncached = applicationCache.onupdateready = function (e) {
+				if (applicationCache.status == applicationCache.UPDATEREADY)
+					applicationCache.swapCache();
+				bae_show();
+			};
+			applicationCache.onprogress = function (e) {
+				//console.log(e);
+				var proc = e.loaded + '/' + e.total;
+				document.title = 'baeword - loading(' + proc + ')...';
+				var div = document.getElementById('progress');
+				if (div) div.innerHTML = proc;
+			};
+			$include(files.slice(0, scpt_idx));
+			document.write('<div id="progress" style="width:100%;text-align:center;margin:10px">loading ...</div>'); //<a href="?show">Skip</a>
+			// forse update
+			if (applicationCache.status != applicationCache.CHECKING) applicationCache.update();
+			setTimeout(function () {
+				if (applicationCache.status == applicationCache.CHECKING)
+					setTimeout(arguments.callee, 300);
+				else if (applicationCache.status != applicationCache.DOWNLOADING)
+					bae_show()
+			}, 500);
+		}
 	}
 
 })() // end of loader util closure
