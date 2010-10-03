@@ -8,7 +8,7 @@
 */
 Ext.namespace('baeword');
 baeword.info = {
-	LAST_UPDATE: '2010-10-01 02:40:49',
+	LAST_UPDATE: '2010-10-03 20:29:28',
 	CODE_NAME: 'Proto',
 	APP_VER: '0.9',
 	APP_NAME: 'baeword',
@@ -364,7 +364,7 @@ baeword.info = {
 			}
 		},
 		filterBy: function (fn, scope) {
-			var fs = this._prefilter ? this._prefilter.concat([]) : []; // clone
+			var fs = this._prefilter ? [].concat(this._prefilter) : []; // clone
 			if (fn) this._filter = { fn: fn, scope: this };
 			this._filter && fs.push(this._filter);
 			fn = this.createMultipleFilterFn(fs);
@@ -687,13 +687,28 @@ baeword.info = {
 		go: function () {
 			baeword.dlgDict.go(comboSearch.getRawValue(), option.defaultDict);
 		},
+		filterWord: function (word) { // for filterTask when keyup
+			word = word || this.getRawValue();
+			if (word.length) {
+				store.filterSearch('word', new RegExp(word, 'i'));
+				comboFilter.change();
+				comboSearch.focus();
+				arguments.callee.lastword = word; // static
+			} else if (arguments.callee.lastword) {
+				arguments.callee.lastword = null; // static
+				this.clear();
+			}
+		},
 		listeners: {
-			render: function () {
-				var data = tempCache.get(this.stateId);
+			added: function (combo) { // init
+				var data = tempCache.get(combo.stateId);
 				if (data && data.length) {
-					this.words = data.split('|');
-					this.loadWords();
+					combo.words = data.split('|');
+					combo.loadWords();
 				}
+				combo.filterTask = new Ext.ux.util.TimeoutTask(combo.filterWord, combo);
+			},
+			render: function () {
 				Ext.fly('triggerSearch').on('click', comboSearch.go);
 			},
 			specialkey: function (field, e) {
@@ -708,18 +723,7 @@ baeword.info = {
 				return false;
 			},
 			keyup: function (combo, e) {
-				combo._timeout = combo._timeout && clearTimeout(combo._timeout) || setTimeout(function () {
-					var word = combo.getRawValue();
-					if (word.length) {
-						store.filterSearch('word', new RegExp(word, 'i'));
-						comboFilter.change();
-						comboSearch.focus();
-						combo.lastword = word;
-					} else if (combo.lastword) {
-						combo.lastword = null;
-						combo.clear();
-					}
-				}, 300);
+				combo.filterTask.delay(300);
 			},
 			select: function () {
 				store.filterSearch('word', new RegExp(word, 'i'));
@@ -1403,15 +1407,16 @@ baeword.info = {
 						chr = String.fromCharCode(e.getCharCode());
 					if (!/\w/.test(chr)) return false;
 					_func._query = _func._query ? _func._query + chr : chr;
-					_func._timeout = _func._timeout && clearTimeout(_func._timeout) || setTimeout(function () {
-						_func._timeout = null;
+					if (_func._task) {
+						_func._task.delay();
+					} else _func._task = new Ext.ux.util.TimeoutTask(function () {
 						var ret = store.find('word', _func._query, 0, false, false);
 						_func._query = '';
 						//alert(_func._query)
 						if (ret < 0) return beep();
 						grid.getSelectionModel().selectRow(ret);
 						grid.view.ensureVisible(ret, 0, true);
-					}, 500);
+					}, this, 500);
 					return false;
 				}
 				if (rate != null) chgrate(rate);
@@ -1564,6 +1569,7 @@ baeword.info = {
 	});
 
 	var dlgDict = baeword.dlgDict = new Ext.Window({
+		id: 'dlg-dict',
 		width: 550,
 		height: 500,
 		maximizable: true,
@@ -1638,12 +1644,12 @@ baeword.info = {
 		}],
 		listeners: {
 			afterrender: function (wnd) {
-				if (!wnd.ifr_dict) {
+				if (!wnd.ifr_dict) { // init
+					wnd._mask_timeout = new Ext.ux.util.TimeoutTask(wnd.body.unmask, wnd.body);
 					wnd.ifr_dict = Ext.get('ifr_dlgDict');
 					wnd.ifr_dict.on('load', function () {
 						if (this.getAttribute('src') == Ext.BLANK_URL) return false;
-						wnd._mask_timeout = wnd._mask_timeout && clearTimeout(wnd._mask_timeout);
-						wnd.body.unmask(); // unmask after loaded
+						wnd._mask_timeout.delay(100); // unmask after loaded
 					});
 					// useless for cannot catch 404
 					//wnd.ifr_dict.on('error', function () {
@@ -1702,10 +1708,7 @@ baeword.info = {
 			wnd.setTitle(icon + word + ' - Online Dictionary [' + dict_items[dict_id].text + ']');
 			wnd.ifr_dict.setSize(wnd.getInnerWidth(), wnd.getInnerHeight());
 			wnd.body.mask('', 'loading'); // mask for loading
-			wnd._mask_timeout = setTimeout(function () {
-				wnd._mask_timeout = null;
-				wnd.body.unmask();
-			}, 5000);
+			wnd._mask_timeout.delay(5000);
 			var url = dict_items[dict_id].url;
 			wnd.ifr_dict.retry = false;
 			wnd.ifr_dict.dom.src = (Ext.isArray(url) ? url[0] : url).replace('{word}', word);
@@ -1822,6 +1825,7 @@ baeword.info = {
 	});
 
 	var dlgWebStorage = baeword.dlgWebStorage = new Ext.Window({
+		id: 'dlgWebStorage',
 		width: 550,
 		height: 400,
 		modal: true,
@@ -1872,14 +1876,11 @@ baeword.info = {
 			this.show(btn, function () { // must
 				wnd.ifr_ws.dom.src = Ext.BLANK_URL;
 				wnd.hide();
-				var delay_show = setTimeout(function () {
-					delay_show = null;
-					wnd.show();
-				}, 1000);
+				var delay_show = new Ext.ux.util.TimeoutTask(wnd.show, wnd, 1000);
 				this.setTitle('Login - WebStorage');
 				this.onLogined = function (wnd, obj_data) {
+					delay_show.cancel();
 					this.onLogined = null;
-					delay_show = delay_show && clearTimeout(delay_show);
 					if (Ext.isFunction(callback)) callback.call(wnd, dlgWebStorage.user);
 				};
 				wnd.ifr_ws.dom.src = wnd.url.base + wnd.url.login;
@@ -2027,8 +2028,13 @@ baeword.info = {
 			cls: 'x-btn-text-icon',
 			iconCls: 'icon-download',
 			handler: function (btn) {
+				if (!btn.timeout) btn.timeout = new Ext.ux.util.TimeoutTask(function () {
+					btn.setIconClass('icon-download');
+					btn.setText('Download from WebStorage');
+					btn.enable();
+				});
 				function after_login() {
-					btn.timeout = btn.timeout && clearTimeout(btn.timeout);
+					btn.timeout.cancel();
 					btn.disable();
 					btn.setIconClass('icon-wait');
 					btn.setText('Downloading...');
@@ -2045,29 +2051,32 @@ baeword.info = {
 						} else if (obj.data) {
 							dlgImport.txtXport.setValue(obj.data);
 							btn.disable();
-							var i = 30, intv = setInterval(function () {
-								btn.setText('You can Download again after ' + --i + 's');
-								if (!i) {
-									clearInterval(intv);
-									btn.enable();
-									btn.setText('Download from WebStorage(' + baeword.dlgWebStorage.user.email + ')');
-								}
-							}, 1000);
+							if (btn._waitTask) {
+								btn._waitTask.restart();
+							} else Ext.ux.util.IntervalTask({
+								task: function (i) {
+									btn.setText('You can Download again after ' + i + 's');
+									if (!i) {
+										btn.enable();
+										btn.setText('Download from WebStorage(' + baeword.dlgWebStorage.user.email + ')');
+										return false;
+									}
+								},
+								interval: 1000,
+								counter: 30,
+								autostart: true
+							});
 							Ext.Msg.alert('Download Success', 'Download Success!<br/>From WebStorage(' + baeword.dlgWebStorage.user.email + ')');
 						}
 						btn.setText('Download from WebStorage(' + baeword.dlgWebStorage.user.email + ')');
 					});
-				}
+				} // end of func after_login
+				// btn handler starts here
 				if (!baeword.dlgWebStorage.user) {
 					btn.disable();
 					btn.setIconClass('icon-wait');
 					btn.setText('Login...');
-					btn.timeout = setTimeout(function () {
-						btn.timeout = null;
-						btn.setIconClass('icon-download');
-						btn.setText('Download from WebStorage');
-						btn.enable();
-					}, 5000);
+					btn.timeout.delay(10000); // 10s
 					baeword.dlgWebStorage.hide();
 					baeword.dlgWebStorage.login(after_login, btn);
 				} else after_login();
@@ -2127,8 +2136,13 @@ baeword.info = {
 					Ext.Msg.alert('Error', 'Export Text is empty!');
 					return false;
 				}
+				if (!btn.timeout) btn.timeout = new Ext.ux.util.TimeoutTask(function () {
+					btn.setIconClass('icon-download');
+					btn.setText('Download from WebStorage');
+					btn.enable();
+				});
 				function after_login() {
-					btn.timeout = btn.timeout && clearTimeout(btn.timeout);
+					btn.timeout.cancel();
 					btn.disable();
 					btn.setIconClass('icon-wait');
 					btn.setText('Uploading...');
@@ -2141,14 +2155,21 @@ baeword.info = {
 						} else {
 							Ext.Msg.alert('Upload Success', 'Upload Success!<br/>To WebStorage(' + baeword.dlgWebStorage.user.email + ')');
 							btn.disable();
-							var i = 60, intv = setInterval(function () {
-								btn.setText('You can Upload again after ' + --i + 's');
-								if (!i) {
-									clearInterval(intv);
-									btn.enable();
-									btn.setText('Upload to WebStorage(' + baeword.dlgWebStorage.user.email + ')');
-								}
-							}, 1000);
+							if (btn._waitTask) {
+								btn._waitTask.restart();
+							} else btn._waitTask = Ext.ux.util.IntervalTask({
+								task: function (i) {
+									btn.setText('You can Upload again after ' + i + 's');
+									if (!i) {
+										btn.enable();
+										btn.setText('Upload to WebStorage(' + baeword.dlgWebStorage.user.email + ')');
+										return false;
+									}
+								},
+								inverval: 1000,
+								counter: 60,
+								autostart: true
+							});
 						}
 					});
 				}
@@ -2156,12 +2177,7 @@ baeword.info = {
 					btn.disable();
 					btn.setIconClass('icon-wait');
 					btn.setText('Login...');
-					btn.timeout = setTimeout(function () {
-						btn.timeout = null;
-						btn.setIconClass('icon-upload');
-						btn.setText('Download from WebStorage');
-						btn.enable();
-					}, 5000);
+					btn.timeout.delay(10000); // 10s
 					baeword.dlgWebStorage.hide();
 					baeword.dlgWebStorage.login(after_login, btn);
 				} else after_login();
@@ -2450,11 +2466,10 @@ baeword.info = {
 		html.push('</div>');
 		html = html.join('\n');
 		// open window and send when ready
-		var wnd = window.open('?export'), timeout = setTimeout(send, 1000); // timeout for opera
-		Ext.fly(wnd).on('load', send);
-		function send() {
+		var wnd = window.open('?export'), sendTask = new Ext.ux.util.TimeoutTask(send, wnd, 1000); // timeout for opera
+		Ext.fly(wnd).on('load', sendTask.run);
+		function send() { // do send
 			if (!wnd.location || wnd.location.href == 'about:blank') return false;
-			timeout = timeout && clearTimeout(timeout);
 			try {
 				// rewrite all doc
 				var doc = wnd.document || wnd.currentDocument;
