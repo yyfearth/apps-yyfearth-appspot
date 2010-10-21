@@ -8,7 +8,7 @@
 */
 Ext.namespace('baeword');
 baeword.info = {
-	LAST_UPDATE: '2010-10-03 20:29:28',
+	LAST_UPDATE: '2010-10-09 21:55:59',
 	CODE_NAME: 'Proto',
 	APP_VER: '0.9',
 	APP_NAME: 'baeword',
@@ -748,12 +748,17 @@ baeword.info = {
 		},
 		listeners: {
 			beforeshow: function () { // the real autoSize is here
-				this.el.setRegion(this.target.parent().getRegion());
-				this.field.el.setRegion(this.target.parent().getRegion());
+				var region = this.target.parent().getRegion()
+				this.el.setRegion(region);
+				this.field.el.setRegion(region);
 			},
 			complete: function (ed, value, oldValue) {
 				this.record.set('rmrk', Ext.util.Format.trim(value));
 			},
+			//canceledit: function () { // bug fix
+			//	grid.view.mainBody.update(grid.view.renderBody()); // refresh grid view
+			//	grid.view.processRows(0, true);
+			//},
 			hide: function () {
 				grid.view.focusRow(this.row); // necessary
 			}
@@ -2029,6 +2034,7 @@ baeword.info = {
 			iconCls: 'icon-download',
 			handler: function (btn) {
 				if (!btn.timeout) btn.timeout = new Ext.ux.util.TimeoutTask(function () {
+					if (!baeword.dlgWebStorage.hidden) return false;
 					btn.setIconClass('icon-download');
 					btn.setText('Download from WebStorage');
 					btn.enable();
@@ -2137,6 +2143,7 @@ baeword.info = {
 					return false;
 				}
 				if (!btn.timeout) btn.timeout = new Ext.ux.util.TimeoutTask(function () {
+					if (!baeword.dlgWebStorage.hidden) return false;
 					btn.setIconClass('icon-download');
 					btn.setText('Download from WebStorage');
 					btn.enable();
@@ -2166,8 +2173,8 @@ baeword.info = {
 										return false;
 									}
 								},
-								inverval: 1000,
-								counter: 60,
+								interval: 1000,
+								counter: 30,
 								autostart: true
 							});
 						}
@@ -2263,13 +2270,21 @@ baeword.info = {
 					wnd.show();
 				}
 			},
+			minimize: function () {
+				grid.view._scroll_pos = grid.view.scroller.dom.scrollTop; // bug fix
+			},
 			show: function () {
 				this.offsetH = this.getHeight() - grid.view.scroller.getHeight();
 				if (!this.maximized)
 					this.resizer.fireEvent('resize', this.resizer, this.width, this.height, null);
 				if (!this.showed) {
-					this.toBack();
+					this.toBack(); // prevent to cover warnning msg
 					this.showed = true;
+				} else {
+					if (Ext.isNumber(grid.view._scroll_pos)) { // bug fix
+						grid.view.scroller.dom.scrollTop = grid.view._scroll_pos;
+						grid.view._scroll_pos = null;
+					}
 				}
 			},
 			resize: function () {
@@ -2322,8 +2337,11 @@ baeword.info = {
 				this.iconImg.appendTo(this.btnEl).center(this.btnEl);
 			});
 			//this.icon = icon_base_url + this.name + '.ico';
+			this.on('render', function(){
+				this.wnd.setAnimateTarget(this.el);
+			});
 			this.wnd.on('minimize', function () {
-				this.hide(thisp.el);
+				this.hide();
 				thisp.toggle(false);
 			});
 			this.wnd.on('hide', function () {
@@ -2333,7 +2351,7 @@ baeword.info = {
 				thisp.toggle(true);
 			});
 			this.on('toggle', function (thisp, state) {
-				state ? thisp.wnd.show(thisp.el) : thisp.wnd.hide(thisp.el);
+				state ? thisp.wnd.show() : thisp.wnd.minimize();
 			});
 		}
 	}), icons = [

@@ -196,66 +196,10 @@ The TimeoutTask class is an advanced Ext.util.DelayedTask class.
 * and the Contructor is more similar to setTimeout function
 */
 Ext.ux.util.TimeoutTask = function (task, timeout, scope, args, autostart, promptly) {
-	var cfg; // smart args
-	if (task.task) {
+	var cfg = {};
+	if (task.task) { // recommended
 		cfg = task;
-	} else {
-		cfg = {};
-		/*if (Ext.isFunction(task)) {
-		cfg.task = task;
-		if (Ext.isNumber(timeout)) { // task, timeout ...
-		cfg.timeout = timeout;
-		if (Ext.isBoolean(scope)) { // task, timeout, [autostart, promptly]
-		cfg.autostart = scope;
-		if (Ext.isBoolean(args)) cfg.promptly = args;
-		} else if (Ext.isArray(args)) { // task, timeout, scope, args, [autostart, promptly]
-		cfg.scope = scope;
-		cfg.args = args;
-		cfg.autostart = autostart;
-		if (Ext.isBoolean(promptly)) cfg.promptly = promptly;
-		} else if (Ext.isBoolean(args)) { // task, timeout, scope, [autostart, promptly]
-		cfg.scope = scope;
-		cfg.autostart = args;
-		if (Ext.isBoolean(autostart)) cfg.promptly = autostart;
-		} else return null;
-		} else if (Ext.isObject(timeout) || timeout == null) { // task, scope ...
-		if (timeout) cfg.scope = timeout;
-		if (Ext.isArray(scope) && Ext.isNumber(args)) { // task, scope, args, timeout, [autostart, promptly]
-		cfg.args = scope;
-		cfg.timeout = args;
-		cfg.autostart = autostart;
-		if (Ext.isBoolean(promptly)) cfg.promptly = promptly;
-		} else if (Ext.isNumber(scope)) { // task, scope, timeout, [autostart, promptly]
-		cfg.timeout = scope;
-		cfg.autostart = args;
-		if (Ext.isBoolean(autostart)) cfg.promptly = autostart;
-		} else return null;
-		} else if (Ext.isBoolean(timeout)) { // task, promptly
-		cfg.autostart = false,
-		cfg.promptly = timeout;
-		} else if (arguments.length <= 3 && timeout == null) { // task
-		cfg.timeout = -1;
-		cfg.autostart = false;
-		cfg.promptly = false;
-		}
-		} else if (Ext.isNumber(task) && Ext.isFunction(timeout)) { // timeout, task ...
-		cfg.timeout = task;
-		cfg.task = timeout;
-		if (Ext.isObject(scope)) { // timeout, task, scope ...
-		cfg.scope = scope;
-		if (Ext.isArray(args)) { // timeout, task, scope, args, [autostart, promptly]
-		cfg.args = args;
-		cfg.autostart = autostart;
-		if (Ext.isBoolean(promptly)) cfg.promptly = promptly;
-		} else if (Ext.isBoolean(args)) { // timeout, task, scope, [autostart, promptly]
-		cfg.autostart = args;
-		if (Ext.isBoolean(autostart)) cfg.promptly = autostart;
-		}
-		} else if (Ext.isBoolean(scope)) { // timeout, task, [autostart, promptly]
-		cfg.autostart = scope;
-		if (Ext.isBoolean(args)) cfg.promptly = args;
-		}
-		} return null;*/
+	} else { // smart args
 		[task, timeout, scope, args].forEach(function (arg) { // smart args detect
 			if (Ext.isFunction(arg)) {
 				cfg.task = arg;
@@ -310,15 +254,16 @@ Ext.ux.util.TimeoutTask = function (task, timeout, scope, args, autostart, promp
 	if (me.promptly) fn();
 	if (me.autostart) me.delay();
 };
-
-
-
+/**
+* @class Ext.util.IntervalTask
+* 
+The IntervalTask class 
+*/
 Ext.ux.util.IntervalTask = function (task, interval, counter, scope, args, autostart, promptly) {
-	var cfg; // smart args
-	if (task.task) {
+	var cfg = {};
+	if (task.task) { // recommended
 		cfg = task;
-	} else {
-		cfg = { task: task };
+	} else { // smart args
 		[task, interval, counter, scope, args].forEach(function (arg) { // smart args detect
 			if (Ext.isFunction(arg)) {
 				cfg.task = arg;
