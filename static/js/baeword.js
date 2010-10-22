@@ -8,12 +8,12 @@
 */
 Ext.namespace('baeword');
 baeword.info = {
-	LAST_UPDATE: '2010-10-09 21:55:59',
+	LAST_UPDATE: '2010-10-21 23:33:30',
 	CODE_NAME: 'Proto',
 	APP_VER: '0.9',
 	APP_NAME: 'baeword',
-	FX_VER: 'ExtJS 3.2+',
-	FX_ID: 'ext322',
+	FX_VER: 'ExtJS 3.3.0',
+	FX_ID: 'extjs330',
 	BY: 'yyfearth.com',
 	EMAIL: 'yyfearth@gmail.com',
 	WEB_SITE: 'http://yyfearth.com/',
@@ -2215,6 +2215,7 @@ baeword.info = {
 		onEsc: Ext.emptyFn, // prevent esc to close
 		baseCls: 'x-panel',
 		//renderTo: 'desktop', // moved into desktop init
+		shadow: false, // for moz5
 		grid: grid,
 		stateful: true,
 		stateId: 'wnd-states',
@@ -2233,9 +2234,12 @@ baeword.info = {
 			return state;
 		},
 		listeners: {
-			render: function () { // init
+			beforerender: function () {
 				this._autoShow = this.autoShow; // bak autoShow
 				this.autoShow = false; // do not auto show, manual show afterrender if autoShow
+				if (!nav.moz5) this.shadow = true; // shadow
+			},
+			render: function () { // init
 				grid.render(this.body); // must
 				grid.bwrap.addClass('x-panel-mc').setStyle('padding', '0px'); // gen border
 				this.resizable = false;

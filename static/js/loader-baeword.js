@@ -244,7 +244,7 @@
 		'ext-all-notheme.css',
 		{ id: 'theme', src: 'xtheme-blue.css' },
 		'ux-baeword.css',
-		'ext-base-debug-w-comments.js',
+		'ext-base-debug.js',
 		'ext-all-debug-wo-flash.js',
 		'ux-baeword.js',
 		'baeword.css',
