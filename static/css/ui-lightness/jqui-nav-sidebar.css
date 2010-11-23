@@ -1,0 +1,30 @@
+﻿body {
+	overflow: hidden;
+	margin: 1px;
+	font-family: SimSun;
+}
+#header {
+	height: auto;
+	margin: 0px;
+	padding: 1px 10px;
+	background: #fdf5ce;
+}
+#header.shrink {
+	overflow: hidden;
+	height: 5px;
+	padding: 1px;
+}
+#header.shrink * {
+	display: none;
+}
+#container {
+	_display: inline-block; /* ie6 */
+	overflow: hidden;
+	margin-left: 3px;
+}
+#nav_addr_txt {
+	width: 80%;
+}
+#ifr_content {
+	width: 100%;
+}
