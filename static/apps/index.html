@@ -45,6 +45,7 @@
 			opacity: .6;
 			outline: none;
 			display: block;
+			*width:300px; /* IE6 hack */
 			text-decoration: none;
 			border: solid 5px #aaf;
 			padding: 5px;
@@ -109,21 +110,22 @@
 			<span class="title">Nav-Sidebar (Demo)</span></a></li>
 	</ul>
 	<script type="text/javascript">
-		// must below all imgs
-		document.body.className = 'loaded';
-		document.getElementsByName("thumb")[0].focus();
-		var imgs = document.getElementsByTagName('img');
-		for (var i = 0; i < imgs.length; i++) {
-			imgs[i].onload = function () {
-				this.className = 'loaded';
-			};
-			imgs[i].onerror = function () {
-				var div_img = document.createElement('div');
-				div_img.className = 'img';
-				div_img.innerText = this.alt;
-				this.parentNode.replaceChild(div_img, this);
-			};
-		}
+		(function(){ // must below all imgs
+			document.body.className = 'loaded';
+			document.getElementsByName("thumb")[0].focus();
+			var imgs = document.getElementsByTagName('img');
+			for (var i = 0; i < imgs.length; i++) {
+				imgs[i].onload = function () {
+					this.className = 'loaded';
+				};
+				imgs[i].onerror = function () {
+					var div_img = document.createElement('div');
+					div_img.className = 'img';
+					div_img.innerText = this.alt;
+					this.parentNode.replaceChild(div_img, this);
+				};
+			}
+		})()
 	</script>
 </body>
 </html>

@@ -121,10 +121,18 @@ if (!String.format) {
 			if (target && /iframe/i.test(target[0].tagName)) { // iframe
 				if (!target.siblings().filter('.ifr_mask').length)
 					target.before('<div class="ifr_mask"></div>');
+				target.one('load', function () { // test addr access
+					try {
+						if (!(document.frames && !window.opera ? target[0].Document : target[0].contentDocument).location)
+							return;
+					} catch (e) { }
+					self.option('access-deny', true);
+				});
 			}
 			if (target) target.load(function () {
 				var items = $('#nav-panel .ui-bar-item');
 				function _failed_match(url) {
+					if (self.option('access-deny')) return false;
 					self.option('current', null);
 					items.switchClass('ui-state-active', 'ui-state-default', 0);
 					if (self.icon_bar)
@@ -330,7 +338,7 @@ if (!String.format) {
 					//var tar_doc = document.frames&&!window.opera ? target : $(target[0].contentWindow.body);
 					//alert(target[0].contentWindow)
 					function ifr_onfocus() {
-						if(self.builder.width() > self.icon_bar.width()){
+						if (self.builder.width() > self.icon_bar.width()) {
 							if (_auto_hide_timeout) clearTimeout(_auto_hide_timeout);
 							_auto_hide_timeout = setTimeout(function () { self.shrink(); }, 100);
 						}
@@ -431,7 +439,7 @@ if (!String.format) {
 				if ($(item_data.element).hasClass('ui-state-active')) return false;
 				$(String.format('#nav-item-$1-$2', item_data.name, item_data.index_path.join('-')), this.builder).click();
 				this._activate(item_data).option('current', item_data);
-			} catch (e) { alert('activate err: ' + e); }
+			} catch (e) { alert('activate err: ' + e.message); }
 			return this;
 		},
 		_init_data: function () {
@@ -449,7 +457,7 @@ if (!String.format) {
 					var cmpnt = data.item[i], c_priv = priv ? (priv.root == true || priv.root && priv.root[cmpnt.name]) : null;
 					cmpnt.index = i;
 					cmpnt.index_path = [i];
-					cmpnt.disabled =data.disabled || cmpnt.disabled || !c_priv;
+					cmpnt.disabled = data.disabled || cmpnt.disabled || !c_priv;
 					if (cur && cmpnt.name == cur[0]) cur[0] = i;
 					data.indexes.cmpnt.push(cmpnt);
 					for (var ii = 0; ii < cmpnt.item.length; ii++) {

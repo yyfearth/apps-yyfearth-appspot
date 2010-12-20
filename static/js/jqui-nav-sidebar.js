@@ -1,4 +1,4 @@
-﻿window.BLANK_IMG = 'images/blank.gif'; // bank img for ie6 png
+﻿window.BLANK_IMG = '../images/blank.gif'; // bank img for ie6 png
 //var user_priv={root:{
 //	"welcome": true,
 //	"customer": true,
