@@ -25,7 +25,7 @@ handlers:
   upload: static/apps/index\.html
   expiration: "15d"
 
-- url: /apps/(index|baeword|xmlcms|browsers)?
+- url: /apps/(index|baeword|xmlcms|browsers|nav-sidebar|demo-content)(\.html?)? # dev
   static_files: static/apps/\1.html
   upload: static/apps/(.+)\.html
   expiration: "1d"
