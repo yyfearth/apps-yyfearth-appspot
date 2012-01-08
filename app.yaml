@@ -2,7 +2,7 @@ application: yyfearth
 version: 1
 runtime: python
 api_version: 1
-default_expiration: "1s"
+default_expiration: "1d"
 
 handlers:
 - url: /(index\.html?)?
@@ -23,25 +23,25 @@ handlers:
 - url: /apps/
   static_files: static/apps/index.html
   upload: static/apps/index\.html
-  expiration: "1s"
+  expiration: "15d"
 
-- url: /apps/(index|baeword|xmlcms|browsers|nav-sidebar|demo-content)(\.html?)? # dev
+- url: /apps/(index|baeword|xmlcms|browsers|nav-sidebar|demo-content|menuwiz|y-js-cal)(\.html?)? # dev
   static_files: static/apps/\1.html
   upload: static/apps/(.+)\.html
-  expiration: "1s"
+  expiration: "1d"
 
  # resources mapping
 - url: /apps/(.+?)\.manifest
   static_files: static/apps/\1.manifest
   upload: static/apps/(.+)\.manifest
   mime_type: text/cache-manifest
-  expiration: "1s"
+  expiration: "30s"
 
 - url: /(js|data)/(.+?\.js)
   static_files: static/\1/\2
   upload: static/(.+?)/(.+?\.js)
   mime_type: text/javascript
-  expiration: "1s"
+  expiration: "1h"
 
 - url: /images/(.+?)\.ico
   static_files: static/images/\1.ico
@@ -49,26 +49,24 @@ handlers:
   mime_type: image/x-icon
   expiration: "30d"
 
-- url: /(js|css|data)/(.+)
-  static_files: static/\1/\2
-  upload: static/(.+)/(.+)
-  expiration: "1s"
-
-- url: /(images|res)/(.+)
+- url: /(images|js|css|res|data)/(.+)
   static_files: static/\1/\2
   upload: static/(.+)/(.+)
   expiration: "1d"
 
  # apps url fix and redirect
-- url: /apps|/(static|dynamic|baeword|xmlcms|XmlCMS)/?
+- url: /apps|/(static|dynamic|baeword|xmlcms|XmlCMS|menuwiz|MenuWiz|y-js-cal|Y-JS-Cal)/?
   script: dynamic/main.py
-- url: /apps/(index|browsers|baeword|xmlcms|export)\.html?
+- url: /apps/(index|browsers|baeword|xmlcms|menuwiz|y-js-cal|export)\.html?
   script: dynamic/main.py
 
- # XmlCMS for XmlCMS.zip
+ # XmlCMS.zip
 - url: /XmlCMS/.+
-  static_dir: XmlCMS
-  #script: $PYTHON_LIB/google/appengine/ext/zipserve
+  script: $PYTHON_LIB/google/appengine/ext/zipserve
+
+ # menuwiz.zip
+- url: /menuwiz/.+
+  script: $PYTHON_LIB/google/appengine/ext/zipserve
 
  # webster cache
 - url: /webster/webster\.css
@@ -80,11 +78,6 @@ handlers:
 # webstorage
 - url: /webstorage.*
   script: dynamic/webstorage/webstorage.py
-# GAppProxy
-- url: /proxy/fetch
-  script: dynamic/gappproxy/fetch.py
-- url: /proxy/admin
-  script: dynamic/gappproxy/admin.py
 
  # admin
 - url: /admin/.*

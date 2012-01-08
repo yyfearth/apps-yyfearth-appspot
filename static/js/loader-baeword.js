@@ -13,10 +13,10 @@
 		nav.kernel = /Trident/i.test(ua) && 'Trident' || /WebKit/i.test(ua) && 'WebKit' || /KHTML/i.test(ua) && 'KHTML' || /Presto/i.test(ua) && 'Presto' || /Gecko/i.test(ua) && 'Gecko'
 		if (nav.app == 'ie') {
 			nav.ver = parseFloat(ua.match(/MSIE (\d+\.\d+)/)[1]);
-			if (typeof localStorage != 'object' || nav.ver > 8) { // IE7- or IE8/9 localfile
+			if (typeof localStorage != 'object')// || nav.ver > 8) { // IE7- or IE8/9 localfile
 				var ver = nav.ver.toFixed(1);
 				if (nav.ver == 8) ver += ' (localStorage Disabled)';
-				else if (nav.ver > 8) ver += ' (Temporary Unsupported)';
+				//else if (nav.ver > 8) ver += ' (Temporary Unsupported)';
 				alert('Your Browser\nMicrosoft Internet Explorer ' + ver + '\nis not supported by this application!\n\nWe recommend you switch your browser to use this WebApp.');
 				document.execCommand('stop');
 				location.replace('browsers.html');
@@ -260,8 +260,7 @@
 		document.close();
 		// code moved to exportHTML
 	} else { // baeword loader
-		console.log(applicationCache.status);
-		if (/\bshow\b/i.test(location.search) || /^file:/i.test(location.href)) { // nav.onLine !== false
+		if (typeof applicationCache == 'undefined' || /\bshow\b/i.test(location.search) || /^file:/i.test(location.href)) { // nav.onLine !== false
 			document.title = 'baeword - init...';
 			$include(files)
 		} else { // check update
@@ -271,6 +270,7 @@
 			//	2: applicationCache.CHECKING,
 			//	3: applicationCache.DOWNLOADING
 			//}) {
+			console.log(applicationCache.status);
 			function bae_show() {
 				if (arguments.callee.called) return false;
 				arguments.callee.called = true;
@@ -303,7 +303,7 @@
 				if (applicationCache.status == applicationCache.CHECKING)
 					setTimeout(arguments.callee, 300);
 				else if (applicationCache.status != applicationCache.DOWNLOADING)
-					bae_show()
+					bae_show();
 			}, 500);
 		}
 	}

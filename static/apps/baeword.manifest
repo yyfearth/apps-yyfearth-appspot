@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# 2010-10-04 01:36:00
+# 2011-06-21 10:12:32
 
 NETWORK:
 http://www.gstatic.com/dictionary/static/sounds/
@@ -54,6 +54,7 @@ CACHE:
 ../images/default/grid/row-check-sprite.gif
 ../images/default/grid/row-over.gif
 ../images/default/grid/sort_asc.gif
+../images/default/grid/sort_desc.gif
 ../images/default/box/tb-blue.gif
 ../images/default/button/arrow.gif
 ../images/default/button/btn.gif
