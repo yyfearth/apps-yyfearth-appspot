@@ -8,7 +8,7 @@ class HomeHandler(webapp.RequestHandler):
 class AppsHandler(webapp.RequestHandler):
 	def get(self, app):
 		app = app.lower()
-		if app in ['index', 'baeword', 'xmlcms']:
+		if app in ['index', 'baeword', 'xmlcms', 'menuwiz', 'y-js-cal']:
 			self.redirect('/apps/' + app)
 		elif app.startswith('/apps/'):
 			self.redirect(app)

@@ -25,7 +25,7 @@ handlers:
   upload: static/apps/index\.html
   expiration: "15d"
 
-- url: /apps/(index|baeword|xmlcms|browsers|nav-sidebar|demo-content)(\.html?)? # dev
+- url: /apps/(index|baeword|xmlcms|browsers|nav-sidebar|demo-content|menuwiz|y-js-cal)(\.html?)? # dev
   static_files: static/apps/\1.html
   upload: static/apps/(.+)\.html
   expiration: "1d"
@@ -55,13 +55,17 @@ handlers:
   expiration: "1d"
 
  # apps url fix and redirect
-- url: /apps|/(static|dynamic|baeword|xmlcms|XmlCMS)/?
+- url: /apps|/(static|dynamic|baeword|xmlcms|XmlCMS|menuwiz|MenuWiz|y-js-cal|Y-JS-Cal)/?
   script: dynamic/main.py
-- url: /apps/(index|browsers|baeword|xmlcms|export)\.html?
+- url: /apps/(index|browsers|baeword|xmlcms|menuwiz|y-js-cal|export)\.html?
   script: dynamic/main.py
 
  # XmlCMS.zip
 - url: /XmlCMS/.+
+  script: $PYTHON_LIB/google/appengine/ext/zipserve
+
+ # menuwiz.zip
+- url: /menuwiz/.+
   script: $PYTHON_LIB/google/appengine/ext/zipserve
 
  # webster cache
@@ -74,11 +78,6 @@ handlers:
 # webstorage
 - url: /webstorage.*
   script: dynamic/webstorage/webstorage.py
-# GAppProxy
-- url: /proxy/fetch
-  script: dynamic/gappproxy/fetch.py
-- url: /proxy/admin
-  script: dynamic/gappproxy/admin.py
 
  # admin
 - url: /admin/.*
